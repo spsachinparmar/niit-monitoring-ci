@@ -91,7 +91,7 @@ public class BatchAvailabilityCI {
 
             if (upcomingBatch.isEmpty()) {
                 failedUrls.add(url);
-                System.out.println("❌ Upcoming Batch not found for: " + url);
+                System.out.println("Upcoming Batch not found for: " + url);
             } else {
                 System.out.println("✅ Upcoming Batch found for: " + url);
             }
