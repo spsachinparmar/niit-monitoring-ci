@@ -8,7 +8,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
+import org.openqa.selenium.PageLoadStrategy;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -27,7 +28,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) // keeps driver alive for all tests
 public class BatchAvailabilityCI {
 
-    private WebDriver driver;
+	private WebDriver driver;
     private WebDriverWait wait;
     private JavascriptExecutor js;
     private final List<String> failedUrls = new ArrayList<>();
@@ -64,16 +65,20 @@ public class BatchAvailabilityCI {
         "https://www.niit.com/india/course/financial-planning-and-stock-market-management/#apply-how",
         "https://www.niit.com/india/course/post-graduate-program-in-banking-sales-relationship-management-pgbsr/#apply-how",
         "https://www.niit.com/india/course/post-graduate-program-in-relationship-management-pgprm-2/#apply-how"
-        // Add remaining 46 URLs here
+        // Add remaining URLs here if needed
     );
 
     @BeforeAll
     void setUp() {
         System.setProperty("webdriver.chrome.driver",
                 "C:\\Users\\sparmar\\Downloads\\Software folder\\chromedriver-win64 (5)\\chromedriver-win64\\chromedriver.exe");
-        driver = new ChromeDriver();
+
+        ChromeOptions options = new ChromeOptions();
+        options.setPageLoadStrategy(PageLoadStrategy.EAGER); // ✅ Only waits for DOMContentLoaded
+        driver = new ChromeDriver(options);
+
         driver.manage().window().maximize();
-        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(60));
         js = (JavascriptExecutor) driver;
     }
 
@@ -82,18 +87,19 @@ public class BatchAvailabilityCI {
     void checkUpcomingBatchForAllCourses() throws InterruptedException {
         for (String url : courseUrls) {
             driver.get(url);
-            wait.until(webDriver -> js.executeScript("return document.readyState").equals("complete"));
+
+            // Small pause to allow dynamic content to settle
             Thread.sleep(2000);
 
             List<WebElement> upcomingBatch = driver.findElements(
-            		By.xpath("//h6[@class='upcoming-batch-heading' and contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'upcoming batch')]"
-                            + " | //h3[@class='batch-heading' and contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'upcoming batch')]"));
+                By.xpath("//h6[@class='upcoming-batch-heading' and contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'upcoming batch')]"
+                        + " | //h3[@class='batch-heading' and contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'upcoming batch')]"));
 
             if (upcomingBatch.isEmpty()) {
                 failedUrls.add(url);
                 System.out.println("Upcoming Batch not found for: " + url);
             } else {
-                System.out.println("✅ Upcoming Batch found for: " + url);
+                System.out.println("Upcoming Batch found for: " + url);
             }
         }
 
