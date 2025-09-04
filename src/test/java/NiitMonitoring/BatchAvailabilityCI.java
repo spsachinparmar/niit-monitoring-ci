@@ -64,7 +64,22 @@ public class BatchAvailabilityCI {
         "https://www.niit.com/india/course/program-in-relationship-management-for-under-graduates-prmug/#apply-how",
         "https://www.niit.com/india/course/financial-planning-and-stock-market-management/#apply-how",
         "https://www.niit.com/india/course/post-graduate-program-in-banking-sales-relationship-management-pgbsr/#apply-how",
-        "https://www.niit.com/india/course/post-graduate-program-in-relationship-management-pgprm-2/#apply-how"
+        "https://www.niit.com/india/course/post-graduate-program-in-relationship-management-pgprm-2/#apply-how",
+        "https://www.niit.com/india/course/generative-ai-essentials-on-aws/#apply-how",
+        "https://www.niit.com/india/course/developing-on-aws/#apply-how",
+        "https://www.niit.com/india/course/itil-4-foundation/#apply-how",
+        "https://www.niit.com/india/course/certified-cloud-security-professional/#apply-how",
+        "https://www.niit.com/india/course/certified-information-system-security-professional/#apply-how",
+        "https://www.niit.com/india/course/certified-information-system-auditor/#apply-how",
+        "https://www.niit.com/india/course/certified-information-security-management/#apply-how",
+        "https://www.niit.com/india/course/certified-in-risk-and-information-systems-control/#apply-how",
+        "https://www.niit.com/india/course/comptia-cybersecurity-analyst/#apply-how",
+        "https://www.niit.com/india/course/comptia-security/#apply-how",
+        "https://www.niit.com/india/course/certified-ethical-hacking-v13/#apply-how",
+        "https://www.niit.com/india/course/architecting-on-aws/#apply-how",
+        "https://www.niit.com/india/course/microsoft-security-compliance-and-identity-fundamentals/#apply-how",
+        "https://www.niit.com/india/course/microsoft-power-bi-data-analyst/#apply-how",
+        "https://www.niit.com/india/course/microsoft-azure-administrator/#apply-how"
         // Add remaining URLs here if needed
     );
 
