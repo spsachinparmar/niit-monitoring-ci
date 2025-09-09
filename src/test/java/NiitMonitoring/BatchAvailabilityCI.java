@@ -27,11 +27,12 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) // keeps driver alive for all tests
 public class BatchAvailabilityCI {
-
 	private WebDriver driver;
     private WebDriverWait wait;
     private JavascriptExecutor js;
-    private final List<String> failedUrls = new ArrayList<>();
+
+    // URLs missing upcoming batch info (with course codes)
+    private final List<String[]> failedCourses = new ArrayList<>();
 
     // List of course URLs — keep this configurable
     private final List<String> courseUrls = Arrays.asList(
@@ -87,9 +88,8 @@ public class BatchAvailabilityCI {
     void setUp() {
         System.setProperty("webdriver.chrome.driver",
                 "C:\\Users\\sparmar\\Downloads\\Software folder\\chromedriver-win64 (5)\\chromedriver-win64\\chromedriver.exe");
-
         ChromeOptions options = new ChromeOptions();
-        options.setPageLoadStrategy(PageLoadStrategy.EAGER); // ✅ Only waits for DOMContentLoaded
+        options.setPageLoadStrategy(PageLoadStrategy.EAGER);
         driver = new ChromeDriver(options);
 
         driver.manage().window().maximize();
@@ -106,20 +106,29 @@ public class BatchAvailabilityCI {
             // Small pause to allow dynamic content to settle
             Thread.sleep(2000);
 
+            // Try to get course code
+            String courseCode = "";
+            try {
+                WebElement codeElement = driver.findElement(By.id("course_code"));
+                courseCode = codeElement.getAttribute("value");
+            } catch (Exception e) {
+                courseCode = "N/A";
+            }
+
             List<WebElement> upcomingBatch = driver.findElements(
-                By.xpath("//h6[@class='upcoming-batch-heading' and contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'upcoming batch')]"
-                        + " | //h3[@class='batch-heading' and contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'upcoming batch')]"));
+                By.xpath("//h6[contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'upcoming batch')]"
+                        + " | //h3[contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'upcoming batch')]"));
 
             if (upcomingBatch.isEmpty()) {
-                failedUrls.add(url);
-                System.out.println("Upcoming Batch not found for: " + url);
+                failedCourses.add(new String[]{url, courseCode});
+                System.out.println("❌ Upcoming Batch not found for: " + url + " (CourseCode: " + courseCode + ")");
             } else {
-                System.out.println("Upcoming Batch found for: " + url);
+                System.out.println("✅ Upcoming Batch found for: " + url + " (CourseCode: " + courseCode + ")");
             }
         }
 
         // Assert that all URLs have upcoming batch (optional)
-        Assertions.assertTrue(failedUrls.isEmpty(), "Some courses are missing Upcoming Batch!");
+        Assertions.assertTrue(failedCourses.isEmpty(), "Some courses are missing Upcoming Batch!");
     }
 
     @AfterAll
@@ -131,7 +140,7 @@ public class BatchAvailabilityCI {
     }
 
     private void generateHtmlReport() {
-        if (failedUrls.isEmpty()) {
+        if (failedCourses.isEmpty()) {
             System.out.println("All URLs have Upcoming Batch. No report generated.");
             return;
         }
@@ -140,11 +149,19 @@ public class BatchAvailabilityCI {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(reportFile))) {
             writer.write("<html><head><title>Batch Availability Report</title></head><body>");
             writer.write("<h2>Courses Missing Upcoming Batch</h2>");
-            writer.write("<ul>");
-            for (String url : failedUrls) {
-                writer.write("<li><a href='" + url + "'>" + url + "</a></li>");
+            writer.write("<table border='1' cellpadding='5' cellspacing='0'>");
+            writer.write("<tr><th>Course URL</th><th>Course Code</th></tr>");
+
+            for (String[] entry : failedCourses) {
+                String url = entry[0];
+                String courseCode = entry[1];
+                writer.write("<tr>");
+                writer.write("<td><a href='" + url + "'>" + url + "</a></td>");
+                writer.write("<td>" + courseCode + "</td>");
+                writer.write("</tr>");
             }
-            writer.write("</ul>");
+
+            writer.write("</table>");
             writer.write("</body></html>");
             System.out.println("HTML report generated: " + reportFile);
         } catch (IOException e) {
