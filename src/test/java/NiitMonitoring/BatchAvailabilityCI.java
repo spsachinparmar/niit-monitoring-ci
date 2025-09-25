@@ -34,7 +34,7 @@ public class BatchAvailabilityCI {
     // URLs missing upcoming batch info (with course codes)
     private final List<String[]> failedCourses = new ArrayList<>();
 
-    // List of course URLs — keep this configurable
+    // List of course URLs â€” keep this configurable
     private final List<String> courseUrls = Arrays.asList(
         "https://www.niit.com/india/course/individual/technology/software-engineering/full-stack-development-with-genai-honours-program/",
         "https://www.niit.com/india/course/individual/technology/software-engineering/java-development-certificate-program/",
@@ -87,7 +87,7 @@ public class BatchAvailabilityCI {
     @BeforeAll
     void setUp() {
         System.setProperty("webdriver.chrome.driver",
-                "C:\\Users\\sparmar\\Downloads\\Software folder\\chromedriver-win64 (5)\\chromedriver-win64\\chromedriver.exe");
+                "C:\\Users\\sparmar\\Downloads\\Software folder\\chromedriver-win64 (4)\\chromedriver-win64\\chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
         options.setPageLoadStrategy(PageLoadStrategy.EAGER);
         driver = new ChromeDriver(options);
@@ -121,9 +121,9 @@ public class BatchAvailabilityCI {
 
             if (upcomingBatch.isEmpty()) {
                 failedCourses.add(new String[]{url, courseCode});
-                System.out.println("❌ Upcoming Batch not found for: " + url + " (CourseCode: " + courseCode + ")");
+                System.out.println("âŒ Upcoming Batch not found for: " + url + " (CourseCode: " + courseCode + ")");
             } else {
-                System.out.println("✅ Upcoming Batch found for: " + url + " (CourseCode: " + courseCode + ")");
+                System.out.println("âœ… Upcoming Batch found for: " + url + " (CourseCode: " + courseCode + ")");
             }
         }
 
