@@ -80,7 +80,13 @@ public class BatchAvailabilityCI {
         "https://www.niit.com/india/course/architecting-on-aws/#apply-how",
         "https://www.niit.com/india/course/microsoft-security-compliance-and-identity-fundamentals/#apply-how",
         "https://www.niit.com/india/course/microsoft-power-bi-data-analyst/#apply-how",
-        "https://www.niit.com/india/course/microsoft-azure-administrator/#apply-how"
+        "https://www.niit.com/india/course/microsoft-azure-administrator/#apply-how",
+        "https://www.niit.com/india/course/sql-essentials-with-genai-alumniit/",
+        "https://www.niit.com/india/course/front-end-dev-with-react-genai-advanced-program-upgrade/",
+        "https://www.niit.com/india/course/full-stack-development-with-genai-honours-program-upgrade-from-pspjp/",
+        "https://www.niit.com/india/course/pgp-in-machine-learning-artificial-intelligence-upgrade/",
+        "https://www.niit.com/india/course/digital-marketing-with-genai-advanced-program-upgrade/",
+        "https://www.niit.com/india/course/professional-program-in-data-analytics-with-genai/"
         // Add remaining URLs here if needed
     );
 
