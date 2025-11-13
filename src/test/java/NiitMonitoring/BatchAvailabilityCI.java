@@ -86,7 +86,8 @@ public class BatchAvailabilityCI {
         "https://www.niit.com/india/course/full-stack-development-with-genai-honours-program-upgrade-from-pspjp/",
         "https://www.niit.com/india/course/pgp-in-machine-learning-artificial-intelligence-upgrade/",
         "https://www.niit.com/india/course/digital-marketing-with-genai-advanced-program-upgrade/",
-        "https://www.niit.com/india/course/professional-program-in-data-analytics-with-genai/"
+        "https://www.niit.com/india/course/professional-program-in-data-analytics-with-genai/",
+        "https://www.niit.com/india/course/building-agentic-ai-systems/#apply-how"
         // Add remaining URLs here if needed
     );
 
