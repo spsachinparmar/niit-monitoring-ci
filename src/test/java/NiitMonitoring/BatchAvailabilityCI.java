@@ -94,7 +94,7 @@ public class BatchAvailabilityCI {
     @BeforeAll
     void setUp() {
         System.setProperty("webdriver.chrome.driver",
-                "C:\\Users\\sparmar\\Downloads\\Software folder\\chromedriver-win64 (4)\\chromedriver-win64\\chromedriver.exe");
+                "C:\\Users\\sparmar\\Downloads\\Software folder\\chromedriver-win64-new-version\\chromedriver-win64\\chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
         options.setPageLoadStrategy(PageLoadStrategy.EAGER);
         driver = new ChromeDriver(options);
