@@ -1,6 +1,7 @@
 package NiitMonitoring;
 
 
+import io.github.bonigarcia.wdm.WebDriverManager;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.junit.jupiter.api.AfterAll;
@@ -22,19 +24,18 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS) // keeps driver alive for all tests
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class BatchAvailabilityCI {
-	private WebDriver driver;
+
+    private WebDriver driver;
     private WebDriverWait wait;
     private JavascriptExecutor js;
 
-    // URLs missing upcoming batch info (with course codes)
     private final List<String[]> failedCourses = new ArrayList<>();
 
-    // List of course URLs â€” keep this configurable
+    // Your URL list (same as before)
     private final List<String> courseUrls = Arrays.asList(
         "https://www.niit.com/india/course/individual/technology/software-engineering/full-stack-development-with-genai-honours-program/",
         "https://www.niit.com/india/course/individual/technology/software-engineering/java-development-certificate-program/",
@@ -88,18 +89,26 @@ public class BatchAvailabilityCI {
         "https://www.niit.com/india/course/digital-marketing-with-genai-advanced-program-upgrade/",
         "https://www.niit.com/india/course/professional-program-in-data-analytics-with-genai/",
         "https://www.niit.com/india/course/building-agentic-ai-systems/#apply-how"
-        // Add remaining URLs here if needed
     );
 
     @BeforeAll
     void setUp() {
-        System.setProperty("webdriver.chrome.driver",
-                "C:\\Users\\sparmar\\Downloads\\Software folder\\chromedriver-win64-new-version\\chromedriver-win64\\chromedriver.exe");
+
+        WebDriverManager.chromedriver().setup();
+
         ChromeOptions options = new ChromeOptions();
         options.setPageLoadStrategy(PageLoadStrategy.EAGER);
-        driver = new ChromeDriver(options);
 
+        // Headless mode enabled automatically in Linux (GitHub Actions/Jenkins)
+        if (System.getProperty("os.name").toLowerCase().contains("linux")) {
+            options.addArguments("--headless=new");
+            options.addArguments("--no-sandbox");
+            options.addArguments("--disable-dev-shm-usage");
+        }
+
+        driver = new ChromeDriver(options);
         driver.manage().window().maximize();
+
         wait = new WebDriverWait(driver, Duration.ofSeconds(60));
         js = (JavascriptExecutor) driver;
     }
@@ -107,35 +116,31 @@ public class BatchAvailabilityCI {
     @Test
     @Order(1)
     void checkUpcomingBatchForAllCourses() throws InterruptedException {
+
         for (String url : courseUrls) {
             driver.get(url);
-
-            // Small pause to allow dynamic content to settle
             Thread.sleep(2000);
 
-            // Try to get course code
-            String courseCode = "";
+            String courseCode = "N/A";
             try {
                 WebElement codeElement = driver.findElement(By.id("course_code"));
                 courseCode = codeElement.getAttribute("value");
-            } catch (Exception e) {
-                courseCode = "N/A";
-            }
+            } catch (Exception ignored) {}
 
             List<WebElement> upcomingBatch = driver.findElements(
                 By.xpath("//h6[contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'upcoming batch')]"
-                        + " | //h3[contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'upcoming batch')]"));
+                       + " | //h3[contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'upcoming batch')]"));
 
             if (upcomingBatch.isEmpty()) {
                 failedCourses.add(new String[]{url, courseCode});
-                System.out.println("âŒ Upcoming Batch not found for: " + url + " (CourseCode: " + courseCode + ")");
+                System.out.println("❌ Upcoming Batch NOT found: " + url + " (Code: " + courseCode + ")");
             } else {
-                System.out.println("âœ… Upcoming Batch found for: " + url + " (CourseCode: " + courseCode + ")");
+                System.out.println("✅ Upcoming Batch found: " + url + " (Code: " + courseCode + ")");
             }
         }
 
-        // Assert that all URLs have upcoming batch (optional)
-        Assertions.assertTrue(failedCourses.isEmpty(), "Some courses are missing Upcoming Batch!");
+        Assertions.assertTrue(failedCourses.isEmpty(),
+            "Some courses are missing Upcoming Batch. Check HTML Report!");
     }
 
     @AfterAll
@@ -148,7 +153,7 @@ public class BatchAvailabilityCI {
 
     private void generateHtmlReport() {
         if (failedCourses.isEmpty()) {
-            System.out.println("All URLs have Upcoming Batch. No report generated.");
+            System.out.println("All courses have Upcoming Batch ✔");
             return;
         }
 
@@ -160,16 +165,13 @@ public class BatchAvailabilityCI {
             writer.write("<tr><th>Course URL</th><th>Course Code</th></tr>");
 
             for (String[] entry : failedCourses) {
-                String url = entry[0];
-                String courseCode = entry[1];
                 writer.write("<tr>");
-                writer.write("<td><a href='" + url + "'>" + url + "</a></td>");
-                writer.write("<td>" + courseCode + "</td>");
+                writer.write("<td><a href='" + entry[0] + "'>" + entry[0] + "</a></td>");
+                writer.write("<td>" + entry[1] + "</td>");
                 writer.write("</tr>");
             }
 
-            writer.write("</table>");
-            writer.write("</body></html>");
+            writer.write("</table></body></html>");
             System.out.println("HTML report generated: " + reportFile);
         } catch (IOException e) {
             e.printStackTrace();
