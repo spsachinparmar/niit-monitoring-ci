@@ -1,0 +1,21 @@
+name: NIIT Monitoring CI
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"   # Runs every 2 hours
+  workflow_dispatch:        # Allows manual run
+
+jobs:
+  run-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run monitoring script
+        run: |
+          echo "Running monitoring job..."
+          # paste your script/commands here
+          # Example:
+          # curl https://example.com/monitoring-api
