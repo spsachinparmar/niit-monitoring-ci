@@ -3,7 +3,7 @@ name: NIIT Monitoring CI
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */2 * * *"
+    - cron: "0 */2 * * *"   # Every 2 hours
 
 jobs:
   run-job:
@@ -13,29 +13,34 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Google Chrome (Correct + Stable)
+      # Install Google Chrome
+      - name: Install Google Chrome
         run: |
           sudo apt update
-          sudo apt install -y wget gnupg2
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | \
-            sudo tee /etc/apt/sources.list.d/google-chrome.list
-          sudo apt update
-          sudo apt install -y google-chrome-stable
+          sudo apt install -y wget jq unzip
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt install -y ./google-chrome-stable_current_amd64.deb
           google-chrome --version
 
-      - name: Install Matching ChromeDriver
+      # Install ChromeDriver (Chrome for Testing version)
+      - name: Install Matching ChromeDriver (Chrome for Testing)
         run: |
-          CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d '.' -f 1)
-          DRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}")
-          wget -N "https://chromedriver.storage.googleapis.com/${DRIVER_VERSION}/chromedriver_linux64.zip"
-          unzip -o chromedriver_linux64.zip
-          sudo mv chromedriver /usr/bin/chromedriver
+          JSON_URL="https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json"
+          DRIVER_VERSION=$(curl -s $JSON_URL | jq -r '.channels.Stable.version')
+
+          echo "Using ChromeDriver version: $DRIVER_VERSION"
+
+          wget -O chromedriver.zip "https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
+          unzip -o chromedriver.zip
+
+          sudo mv chromedriver-linux64/chromedriver /usr/bin/chromedriver
           sudo chmod +x /usr/bin/chromedriver
           chromedriver --version
 
-      - name: Force Selenium to use Linux driver (No Code Changes)
+      # Force Selenium to use our ChromeDriver *without code changes*
+      - name: Override WebDriver path
         run: echo "JAVA_TOOL_OPTIONS=-Dwebdriver.chrome.driver=/usr/bin/chromedriver" >> $GITHUB_ENV
 
+      # Run Maven Tests
       - name: Run Maven Tests
         run: mvn -Dmaven.test.failure.ignore=false test
