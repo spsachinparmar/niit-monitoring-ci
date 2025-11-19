@@ -1,37 +1,35 @@
 name: NIIT Monitoring CI
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: "0 */2 * * *"   # Runs every 2 hours
-  workflow_dispatch:        # Manual trigger
+    - cron: "0 */2 * * *"
 
 jobs:
   run-job:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Install Google Chrome (latest stable)
       - name: Install Google Chrome
         run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
+          sudo apt update
+          sudo apt install -y google-chrome-stable || true
+          google-chrome --version
 
-      # Install ChromeDriver that matches Chrome version
       - name: Install ChromeDriver
         run: |
-          sudo apt-get install -y chromium-chromedriver
-          which chromedriver
+          CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE)
+          wget -N https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
+          unzip -o chromedriver_linux64.zip
+          sudo mv chromedriver /usr/bin/chromedriver
+          sudo chmod +x /usr/bin/chromedriver
+          chromedriver --version
 
-      # Force Selenium to use Linux ChromeDriver (ZERO code change)
-      - name: Set ChromeDriver Path
-        run: |
-          export WEBDRIVER_CHROME=$(which chromedriver)
-          echo "WEBDRIVER_CHROME=$WEBDRIVER_CHROME" >> $GITHUB_ENV
-          echo "Using ChromeDriver at: $WEBDRIVER_CHROME"
+      - name: Override WebDriver path without code changes
+        run: echo "JAVA_TOOL_OPTIONS=-Dwebdriver.chrome.driver=/usr/bin/chromedriver" >> $GITHUB_ENV
 
-      # Run Tests
       - name: Run Maven Tests
-        run: mvn -B clean test
+        run: mvn -Dmaven.test.failure.ignore=false test
