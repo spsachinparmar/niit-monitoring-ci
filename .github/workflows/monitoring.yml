@@ -10,10 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout the repo
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Install Google Chrome
+      # 2️⃣ Install Google Chrome
       - name: Install Google Chrome
         run: |
           sudo apt update
@@ -22,48 +23,5 @@ jobs:
           sudo apt install -y ./google-chrome-stable_current_amd64.deb
           google-chrome --version
 
-      # Install ChromeDriver (Chrome for Testing version)
-      - name: Install Matching ChromeDriver (Chrome for Testing)
-        run: |
-          JSON_URL="https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json"
-          DRIVER_VERSION=$(curl -s $JSON_URL | jq -r '.channels.Stable.version')
-
-          echo "Using ChromeDriver version: $DRIVER_VERSION"
-
-          wget -O chromedriver.zip "https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
-          unzip -o chromedriver.zip
-
-          sudo mv chromedriver-linux64/chromedriver /usr/bin/chromedriver
-          sudo chmod +x /usr/bin/chromedriver
-          chromedriver --version
-
-      # Force Selenium to use our ChromeDriver without code changes
-      - name: Override WebDriver path
-        run: echo "JAVA_TOOL_OPTIONS=-Dwebdriver.chrome.driver=/usr/bin/chromedriver" >> $GITHUB_ENV
-
-      # Run Maven Tests
-      - name: Run Maven Tests
-        run: mvn -Dmaven.test.failure.ignore=false test
-        continue-on-error: true     # 👈 Prevent workflow stop
-
-      # Send Report Email (ALWAYS run this step)
-      - name: Send Expired Batch Courses Report
-        if: always()                # 👈 Email will send even if tests fail
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "Expired Batch Courses - Automated Report"
-          from: "NIIT Monitoring <${{ secrets.SMTP_USERNAME }}>"
-          to: "Sachin.9.Parmar@niit.com"
-          cc: "Jyoti.Bansal@niit.com"
-          secure: true
-          html_body: |
-            <h2>Expired Batch Courses</h2>
-            <p>Hello Team,</p>
-            <p>Please find attached the latest Expired Batch Courses HTML report generated automatically at 10 AM IST.</p>
-            <p>Regards,<br>
-            NIIT Monitoring CI Bot</p>
-          attachments: "./BatchAvailabilityReport.html"
+      # 3️⃣ Install Matching ChromeDriver (Chrome for Testing)
+      - name: Install Matching ChromeDriver
