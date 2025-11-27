@@ -25,3 +25,43 @@ jobs:
 
       # 3️⃣ Install Matching ChromeDriver (Chrome for Testing)
       - name: Install Matching ChromeDriver
+        run: |
+          JSON_URL="https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json"
+          DRIVER_VERSION=$(curl -s $JSON_URL | jq -r '.channels.Stable.version')
+          echo "Using ChromeDriver version: $DRIVER_VERSION"
+          wget -O chromedriver.zip "https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
+          unzip -o chromedriver.zip
+          sudo mv chromedriver-linux64/chromedriver /usr/bin/chromedriver
+          sudo chmod +x /usr/bin/chromedriver
+          chromedriver --version
+
+      # 4️⃣ Set WebDriver path for Selenium
+      - name: Override WebDriver path
+        run: echo "JAVA_TOOL_OPTIONS=-Dwebdriver.chrome.driver=/usr/bin/chromedriver" >> $GITHUB_ENV
+
+      # 5️⃣ Run Maven Tests
+      - name: Run Maven Tests
+        run: mvn -Dmaven.test.failure.ignore=false test
+        continue-on-error: true     # Prevent workflow stop on test failure
+
+      # 6️⃣ Send Report Email (ALWAYS run)
+      - name: Send Expired Batch Courses Report
+        if: always()                # Send email even if tests fail
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "Expired Batch Courses - Automated Report"
+          from: "NIIT Monitoring <${{ secrets.SMTP_USERNAME }}>"
+          to: "Sachin.9.Parmar@niit.com"
+          cc: "Jyoti.Bansal@niit.com"
+          secure: false     # ✅ Use STARTTLS for port 587
+          html_body: |
+            <h2>Expired Batch Courses</h2>
+            <p>Hello Team,</p>
+            <p>Please find attached the latest Expired Batch Courses HTML report generated automatically at 10 AM IST.</p>
+            <p>Regards,<br>
+            NIIT Monitoring CI Bot</p>
+          attachments: "./BatchAvailabilityReport.html"
