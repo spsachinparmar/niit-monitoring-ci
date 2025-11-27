@@ -3,7 +3,7 @@ name: NIIT Monitoring CI
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 4 * * *"   # 10:00 AM IST (04:30 UTC)
+    - cron: "30 4 * * *"   # Runs at 10:00 AM IST (04:30 UTC)
 
 jobs:
   run-job:
@@ -44,9 +44,11 @@ jobs:
       # Run Maven Tests
       - name: Run Maven Tests
         run: mvn -Dmaven.test.failure.ignore=false test
+        continue-on-error: true     # 👈 Prevent workflow stop
 
-      # Send Report Email
+      # Send Report Email (ALWAYS run this step)
       - name: Send Expired Batch Courses Report
+        if: always()                # 👈 Email will send even if tests fail
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
